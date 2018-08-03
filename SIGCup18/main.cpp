@@ -1,9 +1,79 @@
 #include <bits/stdc++.h>
+#include "json.hpp"
 
-using ll = long long;
-using db = double;
-using vi = std::vector<int>;
-using pii = std::pair<int, int>;
+namespace parse {
+	struct Edge {
+		int x, y;
+		std::string id;
+	};
+	std::vector<int> S;
+	std::vector<int> T;
+	std::vector<std::string> points;
+	std::vector<Edge> edges;
+	void parse() {
+		std::ios::sync_with_stdio(0);
+		//freopen("input", "w", stdout);
+
+		freopen("EsriNapervilleElectricNetwork.json", "r", stdin);
+		std::string s, t;
+		while (std::getline(std::cin, s))
+			t += s;
+
+		nlohmann::json j = nlohmann::json::parse(t);
+		std::map <std::string, int> disc;
+		for (auto i : j["rows"]) {
+			//cout << i << '\n';
+			disc[i["fromGlobalId"]] = 0;
+			disc[i["toGlobalId"]] = 0;
+		}
+
+		int n = 0;
+		for (auto &i : disc)
+			i.second = ++n;
+		int m = j["rows"].size();
+		
+		//std::cout << n << ' ' << m << '\n';
+		for (auto i : disc)
+			points.push_back(i.first);
+			//cout << i.first << '\n';
+
+		for (auto i : j["rows"]) {
+			edges.push_back(Edge());
+			edges.back().x = disc[i["fromGlobalId"]];
+			edges.back().y = disc[i["toGlobalId"]];
+			edges.back().id = i["viaGlobalId"];
+			/*
+			std::cout << disc[i["fromGlobalId"]] << ' ';
+			std::cout << disc[i["toGlobalId"]] << ' ';
+			s = i["viaGlobalId"];
+			std::cout << s << '\n';
+			*/
+		}
+		
+		for (auto i : j["controllers"]) {
+			S.push_back(disc[i["globalId"]]);
+		}
+		freopen("startingpoints.txt", "r", stdin);
+		std::cin.clear();
+		while (std::getline(std::cin, s)) {
+			//cout << s << '\n';
+			T.push_back(disc[s]);
+			//for(auto i : disc)
+			//if(i.sec == 2159) {
+			//cout << i.fir << '\n';
+			//cout << (i.fir == s) << '\n';
+			//cout << s.size() << ' ' << i.fir.size() << '\n';
+			//}
+		}
+		
+		/*
+		std::cout << S.size() << '\n';
+		for (int x : S) std::cout << x << '\n';
+		std::cout << T.size() << '\n';
+		for (int x : T) std::cout << x << '\n';
+		*/
+	}
+}
 
 #define AddEdge(x, y, z) num[tail[x] = next[tail[x]] = ++ etot] = y; val[etot] = z;
 
@@ -219,7 +289,12 @@ void resizevector(int n, int m) {
 }
 
 void input(int &n, int &m, int &check) {
-	std::cin >> n >> m;
+	parse::parse();
+
+	//std::cin >> n >> m;
+	n = parse::points.size();
+	m = parse::edges.size();
+
 	resizevector(n, m);
 	etot = n + 1;
 	if ((etot & 1) == 0) etot++;
@@ -227,37 +302,57 @@ void input(int &n, int &m, int &check) {
 		tail[i] = i;
 	for (int i = 1; i <= n; i++) {
 		vertex_id[i] = strings.size();
-		strings.push_back("");
-		std::cin >> strings.back();
+
+		//strings.push_back("");
+		//std::cin >> strings.back();
+		strings.push_back(parse::points[i - 1]);
+
 	}
 	for (int i = 1; i <= m; i++) {
 		int u, v, s = strings.size();
-		strings.push_back("");
-		std::cin >> u >> v >> strings.back();
+
+		//strings.push_back("");
+		//std::cin >> u >> v >> strings.back();
+		u = parse::edges[i - 1].x;
+		v = parse::edges[i - 1].y;
+		strings.push_back(parse::edges[i - 1].id);
+
 		AddEdge(u, v, s);
 		AddEdge(v, u, s);
 	}
 	int sn, en;
-	std::cin >> sn;
+
+	//std::cin >> sn;
+	sn = parse::S.size();
+
 	if (sn == 1) check = -2;
-	for (; sn--; ) {
-		int t;
-		std::cin >> t;
+
+	//for (; sn--; ) {
+	//	int t;
+	//	std::cin >> t;
+	for (auto t : parse::S) {
+
 		starts[t] = 1;
 		if (check == -2) check = t;
 	}
-	std::cin >> en;
+
+	//std::cin >> en;
+	en = parse::T.size();
+
 	if (en != 1) check = -1;
-	for (; en--; ) {
-		int t;
-		std::cin >> t;
+
+	//for (; en--; ) {
+	//	int t;
+	//	std::cin >> t;
+	for (auto t : parse::T) {
+
 		ends[t] = 1;
 		if (check != t) check = -1;
 	}
 }
 
 int main() {
-	freopen("input.txt", "r", stdin);
+	//freopen("input.txt", "r", stdin);
 	freopen("result.txt", "w", stdout);
 	std::ios::sync_with_stdio(0);
 	int n, m, check = -1;
@@ -281,10 +376,10 @@ int main() {
 			belong[j] = belong[j ^ 1] = i;
 	auto ans = nn::solve(n, bcc, belong);
 	std::set<std::string> ansset;
-	//for (auto &i : ans)
-	//	ansset.insert(i);
 	for (auto &i : ans)
-		std::cout << strings[i] << '\n';
+		ansset.insert(strings[i]);
+	for (auto &i : ansset)
+		std::cout << i << '\n';
 
 	return 0;
 }
