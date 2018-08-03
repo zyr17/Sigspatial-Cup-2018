@@ -188,7 +188,7 @@ namespace nn {
 
 int main() {
 	freopen("input.txt", "r", stdin);
-	//freopen("result.txt", "w", stdout);
+	freopen("result.txt", "w", stdout);
 	std::ios::sync_with_stdio(0);
 	int n, m;
 	std::cin >> n >> m;
