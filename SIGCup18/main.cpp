@@ -7,17 +7,17 @@ using pii = std::pair<int, int>;
 
 #define AddEdge(x, y, z) num[tail[x] = next[tail[x]] = ++ etot] = y; val[etot] = z;
 
-const int N = 11111111;
-
-int vertex_id[N], edge_id[N];
+std::vector<int> vertex_id;
 std::vector<std::string> strings;
 namespace oo {
-	int num[N], tail[N], next[N], etot;
-	int val[N];
-	int belong[N];
+	std::vector<int> num, tail, next, val, belong;
+	int etot;
 
-	int dfn[N], low[N]; int cnt = 0;
-	bool cut[N]; std::stack<int> sta; std::vector<std::vector<int>> bcc;
+	std::vector<int> dfn, low;
+	int cnt = 0;
+	std::vector<bool> cut;
+	std::stack<int> sta;
+	std::vector<std::vector<int>> bcc;
 
 	int tarjan(int x, int pe) {
 		dfn[x] = low[x] = ++cnt; int ecnt = 0;
@@ -45,14 +45,15 @@ namespace oo {
 
 using namespace oo;
 
-bool starts[N], ends[N];
-int edgedone[N];
+std::vector<bool> starts, ends;
+std::vector<int> edgedone;
 
 namespace nn {
-	int num[N], tail[N], next[N], val[N], etot, fa[N];
+	std::vector<int> num, tail, next, val, fa;
+	int etot;
 	std::vector<int> roots;
-	bool isstart[N], isend[N];
-	int startnum[N], endnum[N], treestart[N], treeend[N];
+	std::vector<bool> isstart, isend;
+	std::vector<int> startnum, endnum, treestart, treeend;
 	int n;
 	std::vector<std::vector<int>> strin;
 
@@ -68,7 +69,7 @@ namespace nn {
 		endnum[k] += isend[k];
 	}
 
-	std::vector<int> solve(int oldn, std::vector<std::vector<int>> &bcc, int *belong) {
+	std::vector<int> solve(int oldn, std::vector<std::vector<int>> &bcc, std::vector<int> &belong) {
 		n = 0;
 		for (int i = 1; i <= oldn; i++)
 			n += cut[i];
@@ -102,7 +103,7 @@ namespace nn {
 			std::cout << std::endl;
 		}
 		*/
-		memset(edgedone, 255, sizeof edgedone);
+		memset(&(edgedone[0]), 255, sizeof(int) * edgedone.size());
 		for (int i = 0; i < bcc.size(); i++) {
 			auto &bb = bcc[i];
 			int set = i + cutn + 1;
@@ -185,13 +186,41 @@ namespace nn {
 		return ans;
 	}
 }
+void nnresizevector(int n, int m) {
+	int N = n + m * 2 + 1111;
+	nn::num.resize(N);
+	nn::tail.resize(N);
+	nn::next.resize(N);
+	nn::val.resize(N);
+	nn::fa.resize(N);
+	nn::isstart.resize(N);
+	nn::isend.resize(N);
+	nn::num.resize(N);
+	nn::startnum.resize(N);
+	nn::endnum.resize(N);
+	nn::treestart.resize(N);
+	nn::treeend.resize(N);
+}
+void resizevector(int n, int m) {
+	int N = n + m * 2 + 1111;
+	vertex_id.resize(N);
+	num.resize(N);
+	tail.resize(n + 1111);
+	next.resize(N);
+	val.resize(N);
+	belong.resize(N);
+	dfn.resize(n + 1111);
+	low.resize(n + 1111);
+	cut.resize(n + 1111);
+	starts.resize(N);
+	ends.resize(N);
+	edgedone.resize(N);
+	nnresizevector(n + m, m * 2);
+}
 
-int main() {
-	freopen("input.txt", "r", stdin);
-	freopen("result.txt", "w", stdout);
-	std::ios::sync_with_stdio(0);
-	int n, m;
+void input(int &n, int &m, int &check) {
 	std::cin >> n >> m;
+	resizevector(n, m);
 	etot = n + 1;
 	if ((etot & 1) == 0) etot++;
 	for (int i = 1; i <= n; i++)
@@ -208,7 +237,7 @@ int main() {
 		AddEdge(u, v, s);
 		AddEdge(v, u, s);
 	}
-	int sn, en, check = -1;
+	int sn, en;
 	std::cin >> sn;
 	if (sn == 1) check = -2;
 	for (; sn--; ) {
@@ -225,6 +254,14 @@ int main() {
 		ends[t] = 1;
 		if (check != t) check = -1;
 	}
+}
+
+int main() {
+	freopen("input.txt", "r", stdin);
+	freopen("result.txt", "w", stdout);
+	std::ios::sync_with_stdio(0);
+	int n, m, check = -1;
+	input(n, m, check);
 
 	//if srart and end is one same point, return it
 	if (check > 0) {
