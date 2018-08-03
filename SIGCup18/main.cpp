@@ -9,10 +9,11 @@ using pii = std::pair<int, int>;
 
 const int N = 11111111;
 
-std::string vertex_id[N], edge_id[N];
+int vertex_id[N], edge_id[N];
+std::vector<std::string> strings;
 namespace oo {
 	int num[N], tail[N], next[N], etot;
-	std::string val[N];
+	int val[N];
 	int belong[N];
 
 	int dfn[N], low[N]; int cnt = 0;
@@ -53,7 +54,7 @@ namespace nn {
 	bool isstart[N], isend[N];
 	int startnum[N], endnum[N], treestart[N], treeend[N];
 	int n;
-	std::vector<std::vector<std::string>> strin;
+	std::vector<std::vector<int>> strin;
 
 	void dfs(int k) {
 		for (int i = next[k]; i; i = next[i])
@@ -67,7 +68,7 @@ namespace nn {
 		endnum[k] += isend[k];
 	}
 
-	std::vector<std::string> solve(int oldn, std::vector<std::vector<int>> &bcc, int *belong) {
+	std::vector<int> solve(int oldn, std::vector<std::vector<int>> &bcc, int *belong) {
 		n = 0;
 		for (int i = 1; i <= oldn; i++)
 			n += cut[i];
@@ -153,7 +154,7 @@ namespace nn {
 				if (fa[num[i]] == t)
 					qq.push(num[i]);
 		}
-		std::vector<std::string> ans;
+		std::vector<int> ans;
 		for (int i = 1; i <= n; i++) {
 			if (isstart[i] && isend[i]) {
 				for (auto &j : strin[i])
@@ -187,6 +188,7 @@ namespace nn {
 
 int main() {
 	freopen("input.txt", "r", stdin);
+	//freopen("result.txt", "w", stdout);
 	std::ios::sync_with_stdio(0);
 	int n, m;
 	std::cin >> n >> m;
@@ -194,12 +196,15 @@ int main() {
 	if ((etot & 1) == 0) etot++;
 	for (int i = 1; i <= n; i++)
 		tail[i] = i;
-	for (int i = 1; i <= n; i++)
-		std::cin >> vertex_id[i];
+	for (int i = 1; i <= n; i++) {
+		vertex_id[i] = strings.size();
+		strings.push_back("");
+		std::cin >> strings.back();
+	}
 	for (int i = 1; i <= m; i++) {
-		int u, v;
-		std::string s;
-		std::cin >> u >> v >> s;
+		int u, v, s = strings.size();
+		strings.push_back("");
+		std::cin >> u >> v >> strings.back();
 		AddEdge(u, v, s);
 		AddEdge(v, u, s);
 	}
@@ -223,7 +228,7 @@ int main() {
 
 	//if srart and end is one same point, return it
 	if (check > 0) {
-		std::cout << vertex_id[check];
+		std::cout << strings[vertex_id[check]];
 
 		return 0;
 	}
@@ -241,9 +246,8 @@ int main() {
 	std::set<std::string> ansset;
 	//for (auto &i : ans)
 	//	ansset.insert(i);
-	freopen("result.txt", "w", stdout);
 	for (auto &i : ans)
-		std::cout << i << '\n';
+		std::cout << strings[i] << '\n';
 
 	return 0;
 }
