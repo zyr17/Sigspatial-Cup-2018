@@ -1,11 +1,8 @@
 #include <bits/stdc++.h>
-#include "json.hpp"
 
-//#define InputJSON "EsriNapervilleElectricNetwork.json"
-//#define InputJSON "SampleDataset1.json"
 #define InputJSON "test.json"
-//#define StartPointFile "startingpoints.txt"
 #define StartPointFile "teststart.txt"
+#define OutputFile "result.txt"
 
 namespace parse {
 	struct Edge {
@@ -28,70 +25,6 @@ namespace parse {
 	const int FindControllers = -100, EndOfFile = -1;
 	const char controllers[] = "controllers";
 	std::vector<std::vector<int>> id2e;
-
-	void parse_old() {
-		std::ios::sync_with_stdio(0);
-		//freopen("input", "w", stdout);
-
-		freopen(InputJSON, "r", stdin);
-		std::string s, t;
-		while (std::getline(std::cin, s))
-			t += s;
-
-		nlohmann::json j = nlohmann::json::parse(t);
-		std::map <std::string, int> disc;
-		for (auto i : j["rows"]) {
-			//cout << i << '\n';
-			disc[i["fromGlobalId"]] = 0;
-			disc[i["toGlobalId"]] = 0;
-		}
-
-		int n = 0;
-		for (auto &i : disc)
-			i.second = ++n;
-		int m = j["rows"].size();
-		
-		//std::cout << n << ' ' << m << '\n';
-		for (auto i : disc)
-			points.push_back(i.first);
-			//cout << i.first << '\n';
-
-		for (auto i : j["rows"]) {
-			edges.push_back(Edge());
-			edges.back().x = disc[i["fromGlobalId"]];
-			edges.back().y = disc[i["toGlobalId"]];
-			edges.back().id = i["viaGlobalId"];
-			/*
-			std::cout << disc[i["fromGlobalId"]] << ' ';
-			std::cout << disc[i["toGlobalId"]] << ' ';
-			s = i["viaGlobalId"];
-			std::cout << s << '\n';
-			*/
-		}
-		
-		for (auto i : j["controllers"]) {
-			S.push_back(disc[i["globalId"]]);
-		}
-		freopen(StartPointFile, "r", stdin);
-		std::cin.clear();
-		while (std::getline(std::cin, s)) {
-			//cout << s << '\n';
-			T.push_back(disc[s]);
-			//for(auto i : disc)
-			//if(i.sec == 2159) {
-			//cout << i.fir << '\n';
-			//cout << (i.fir == s) << '\n';
-			//cout << s.size() << ' ' << i.fir.size() << '\n';
-			//}
-		}
-		
-		/*
-		std::cout << S.size() << '\n';
-		for (int x : S) std::cout << x << '\n';
-		std::cout << T.size() << '\n';
-		for (int x : T) std::cout << x << '\n';
-		*/
-	}
 
 	int gettoken(const char *input) {
 		for (;;) {
@@ -224,43 +157,6 @@ namespace parse {
 		while (std::getline(std::cin, temp))
 			setSE(temp, 0);
 	}
-	void parsetest() {
-		freopen("input.txt", "r", stdin);
-		std::ios::sync_with_stdio(0);
-		int n, m;
-		std::cin >> n >> m;
-		for (; n--; ) {
-			std::string s;
-			std::cin >> s;
-			points.push_back(s);
-		}
-		for (; m--; ) {
-			edges.push_back(Edge());
-			std::cin >> edges.back().x >> edges.back().y >> edges.back().id;
-		}
-		for (std::cin >> n; n--; ) {
-			int t;
-			std::cin >> t;
-			S.push_back(t);
-		}
-		for (std::cin >> n; n--; ) {
-			int t;
-			std::cin >> t;
-			T.push_back(t);
-		}
-		n = 0;
-		for (std::cin >> n; n--; ) {
-			int t;
-			std::cin >> t;
-			edges[t - 1].isstart = 1;
-		}
-		n = 0;
-		for (std::cin >> n; n--; ) {
-			int t;
-			std::cin >> t;
-			edges[t - 1].isend = 1;
-		}
-	}
 }
 
 #define AddEdge(x, y, z) num[tail[x] = next[tail[x]] = ++ etot] = y; val[etot] = z;
@@ -353,20 +249,11 @@ namespace nn {
 						AddEdge(cutn + belong[j] + 1, nowcut, 0);
 					}
 			}
-		/*
-		for (int i = 1; i <= n; i++) {
-			std::cout << i << std::endl;
-			for (int j = next[i]; j; j = next[j])
-				std::cout << num[j] << ' ';
-			std::cout << std::endl;
-		}
-		*/
 		memset(&(edgedone[0]), 255, sizeof(int) * edgedone.size());
 		for (int i = 0; i < bcc.size(); i++) {
 			auto &bb = bcc[i];
 			int set = i + cutn + 1;
 			for (int j : bb) {
-				//std::cout << set << ' ' << oo::val[j] << ' ' << oo::num[j] << oo::num[j ^ 1] << std::endl;
 				if (edgedone[j] != i) {
 					strin[set].push_back(oo::val[j]);
 					edgedone[j] = i;
@@ -482,7 +369,6 @@ void resizevector(int n, int m) {
 void input(int &n, int &m, int &check) {
 	parse::parse();
 
-	//std::cin >> n >> m;
 	n = parse::points.size();
 	m = parse::edges.size();
 
@@ -494,8 +380,6 @@ void input(int &n, int &m, int &check) {
 	for (int i = 1; i <= n; i++) {
 		vertex_id[i] = strings.size();
 
-		//strings.push_back("");
-		//std::cin >> strings.back();
 		strings.push_back(parse::points[i - 1]);
 
 	}
@@ -503,8 +387,6 @@ void input(int &n, int &m, int &check) {
 	for (int i = 1; i <= m; i++) {
 		int u, v, s = strings.size();
 
-		//strings.push_back("");
-		//std::cin >> u >> v >> strings.back();
 		u = parse::edges[i - 1].x;
 		v = parse::edges[i - 1].y;
 		strings.push_back(parse::edges[i - 1].id);
@@ -517,12 +399,8 @@ void input(int &n, int &m, int &check) {
 	}
 	int sn, en;
 
-	//std::cin >> sn;
 	sn = parse::S.size();
 
-	//for (; sn--; ) {
-	//	int t;
-	//	std::cin >> t;
 	for (auto t : parse::S) {
 
 		starts[t] = 1;
@@ -530,31 +408,26 @@ void input(int &n, int &m, int &check) {
 		sttot++;
 	}
 
-	//std::cin >> en;
 	en = parse::T.size();
 
-	//for (; en--; ) {
-	//	int t;
-	//	std::cin >> t;
 	for (auto t : parse::T) {
 
 		ends[t] = 1;
 		laste = t;
 		edtot++;
 	}
-	//std::cout << sttot << ' ' << edtot << ' ' << lasts << ' ' << laste << '\n';
 	if (1 == edtot && sttot == 1 && lasts == laste)
 		check = lasts;
 }
 
 int main() {
 	//freopen("input.txt", "r", stdin);
-	freopen("result.txt", "w", stdout);
+	freopen(OutputFile, "w", stdout);
 	std::ios::sync_with_stdio(0);
 	int n, m, check = -1;
 	input(n, m, check);
 
-	//if srart and end is one same point, return it
+	//if srart and end is one same feature, return it
 	if (check > 0) {
 		std::cout << strings[vertex_id[check]];
 
@@ -572,6 +445,7 @@ int main() {
 			belong[j] = belong[j ^ 1] = i;
 	auto ans = nn::solve(n, bcc, belong);
 	std::set<std::string> ansset;
+	//sort and remove duplicate
 	//for (auto &i : ans)
 	//	ansset.insert(strings[i]);
 	for (auto &i : ans)
