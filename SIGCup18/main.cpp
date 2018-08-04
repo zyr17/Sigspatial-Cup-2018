@@ -1,6 +1,12 @@
 #include <bits/stdc++.h>
 #include "json.hpp"
 
+//#define InputJSON "EsriNapervilleElectricNetwork.json"
+//#define InputJSON "SampleDataset1.json"
+#define InputJSON "test.json"
+//#define StartPointFile "startingpoints.txt"
+#define StartPointFile "teststart.txt"
+
 namespace parse {
 	struct Edge {
 		int x, y;
@@ -11,11 +17,23 @@ namespace parse {
 	std::vector<int> T;
 	std::vector<std::string> points;
 	std::vector<Edge> edges;
-	void parse() {
+
+	struct Tree {
+		int next[16], pointid, edgevecnum;
+	};
+	std::vector<Tree> tree;
+	int A2I[256];
+	int stringpos;
+	std::string str;
+	const int FindControllers = -100, EndOfFile = -1;
+	const char controllers[] = "controllers";
+	std::vector<std::vector<int>> id2e;
+
+	void parse_old() {
 		std::ios::sync_with_stdio(0);
 		//freopen("input", "w", stdout);
 
-		freopen("EsriNapervilleElectricNetwork.json", "r", stdin);
+		freopen(InputJSON, "r", stdin);
 		std::string s, t;
 		while (std::getline(std::cin, s))
 			t += s;
@@ -54,7 +72,7 @@ namespace parse {
 		for (auto i : j["controllers"]) {
 			S.push_back(disc[i["globalId"]]);
 		}
-		freopen("startingpoints.txt", "r", stdin);
+		freopen(StartPointFile, "r", stdin);
 		std::cin.clear();
 		while (std::getline(std::cin, s)) {
 			//cout << s << '\n';
@@ -73,6 +91,138 @@ namespace parse {
 		std::cout << T.size() << '\n';
 		for (int x : T) std::cout << x << '\n';
 		*/
+	}
+
+	int gettoken(const char *input) {
+		for (;;) {
+			for (; stringpos < str.size() && str[stringpos] != '\"'; stringpos++);
+			if (stringpos == str.size()) return EndOfFile;
+			int tokenend = ++stringpos;
+			for (; tokenend < str.size() && str[tokenend] != '\"'; tokenend++);
+			if (tokenend == str.size()) return EndOfFile;
+			bool flag = 1;
+			for (int i = 0; flag && i + stringpos < tokenend; i++)
+				if (input[i] != str[stringpos + i]) flag = 0;
+			flag = flag && (input[tokenend - stringpos] == 0);
+			if (flag) {
+				stringpos = tokenend + 1;
+				return 0;
+			}
+			flag = 1;
+			for (int i = 0; flag && i + stringpos < tokenend; i++)
+				if (controllers[i] != str[stringpos + i]) flag = 0;
+			flag = flag && (controllers[tokenend - stringpos] == 0);
+			if (flag) {
+				stringpos = tokenend + 1;
+				return FindControllers;
+			}
+		}
+	}
+
+	void getnext(std::string &out) {
+		out = "";
+		for (; stringpos < str.size() && str[stringpos] != '\"'; stringpos++);
+		if (stringpos == str.size()) return;
+		int tokenend = ++stringpos;
+		for (; tokenend < str.size() && str[tokenend] != '\"'; tokenend++);
+		if (tokenend == str.size()) return;
+		out = str.substr(stringpos, tokenend - stringpos);
+		stringpos = tokenend + 1;
+	}
+
+	Tree &getleaf(std::string &id) {
+		int now = 0;
+		for (auto i : id) {
+			int childnum = A2I[i];
+			if (childnum == -1) continue;
+			if (tree[now].next[childnum] == 0) {
+				tree[now].next[childnum] = tree.size();
+				tree.push_back(Tree());
+			}
+			now = tree[now].next[childnum];
+		}
+		return tree[now];
+	}
+
+	void addedge(std::string &id, int edgeid) {
+		auto &leaf = getleaf(id);
+		if (!leaf.edgevecnum) {
+			leaf.edgevecnum = id2e.size();
+			id2e.push_back(std::vector<int>());
+		}
+		id2e[leaf.edgevecnum].push_back(edgeid);
+	}
+
+	int addpoint(std::string &id) {
+		auto &leaf = getleaf(id);
+		if (!leaf.pointid) {
+			points.push_back(id);
+			leaf.pointid = points.size();
+		}
+		return leaf.pointid;
+	}
+
+	void setSE(std::string &id, bool isstart) {
+		auto &leaf = getleaf(id);
+		if (leaf.pointid) {
+			if (isstart) S.push_back(leaf.pointid);
+			else T.push_back(leaf.pointid);
+		}
+		if (leaf.edgevecnum)
+			for (auto i : id2e[leaf.edgevecnum]) {
+				if (isstart) edges[i].isstart = 1;
+				else edges[i].isend = 1;
+			}
+	}
+
+	void parse() {
+		std::ios::sync_with_stdio(0);
+		freopen(InputJSON, "r", stdin);
+		std::string temp;
+		std::getline(std::cin, str);
+		while (std::getline(std::cin, temp))
+			str += temp;
+		id2e.push_back(std::vector<int>());
+		tree.push_back(Tree());
+		memset(A2I, 255, sizeof A2I);
+		A2I['0'] = 0;
+		A2I['1'] = 1;
+		A2I['2'] = 2;
+		A2I['3'] = 3;
+		A2I['4'] = 4;
+		A2I['5'] = 5;
+		A2I['6'] = 6;
+		A2I['7'] = 7;
+		A2I['8'] = 8;
+		A2I['9'] = 9;
+		A2I['A'] = 10;
+		A2I['B'] = 11;
+		A2I['C'] = 12;
+		A2I['D'] = 13;
+		A2I['E'] = 14;
+		A2I['F'] = 15;
+		gettoken("rows");
+		for (;;) {
+			if (gettoken("viaGlobalId") == FindControllers) break;
+			edges.push_back(Edge());
+			getnext(edges.back().id);
+			addedge(edges.back().id, edges.size() - 1);
+			gettoken("fromGlobalId");
+			getnext(temp);
+			edges.back().x = addpoint(temp);
+			gettoken("toGlobalId");
+			getnext(temp);
+			edges.back().y = addpoint(temp);
+		}
+		for (;;) {
+			if (gettoken("globalId") == EndOfFile) break;
+			getnext(temp);
+			setSE(temp, 1);
+		}
+		freopen(StartPointFile, "r", stdin);
+		std::cin.clear();
+		while (std::getline(std::cin, temp))
+			setSE(temp, 0);
 	}
 	void parsetest() {
 		freopen("input.txt", "r", stdin);
@@ -330,7 +480,7 @@ void resizevector(int n, int m) {
 }
 
 void input(int &n, int &m, int &check) {
-	parse::parsetest();
+	parse::parse();
 
 	//std::cin >> n >> m;
 	n = parse::points.size();
