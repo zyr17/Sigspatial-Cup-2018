@@ -5,6 +5,7 @@ namespace parse {
 	struct Edge {
 		int x, y;
 		std::string id;
+		bool isstart, isend;
 	};
 	std::vector<int> S;
 	std::vector<int> T;
@@ -72,6 +73,43 @@ namespace parse {
 		std::cout << T.size() << '\n';
 		for (int x : T) std::cout << x << '\n';
 		*/
+	}
+	void parsetest() {
+		freopen("input.txt", "r", stdin);
+		std::ios::sync_with_stdio(0);
+		int n, m;
+		std::cin >> n >> m;
+		for (; n--; ) {
+			std::string s;
+			std::cin >> s;
+			points.push_back(s);
+		}
+		for (; m--; ) {
+			edges.push_back(Edge());
+			std::cin >> edges.back().x >> edges.back().y >> edges.back().id;
+		}
+		for (std::cin >> n; n--; ) {
+			int t;
+			std::cin >> t;
+			S.push_back(t);
+		}
+		for (std::cin >> n; n--; ) {
+			int t;
+			std::cin >> t;
+			T.push_back(t);
+		}
+		n = 0;
+		for (std::cin >> n; n--; ) {
+			int t;
+			std::cin >> t;
+			edges[t - 1].isstart = 1;
+		}
+		n = 0;
+		for (std::cin >> n; n--; ) {
+			int t;
+			std::cin >> t;
+			edges[t - 1].isend = 1;
+		}
 	}
 }
 
@@ -182,6 +220,8 @@ namespace nn {
 				if (edgedone[j] != i) {
 					strin[set].push_back(oo::val[j]);
 					edgedone[j] = i;
+					if (starts[j]) isstart[set] = 1;
+					if (ends[j]) isend[set] = 1;
 				}
 				if (edgedone[oo::num[j]] != i && !(cut[oo::num[j]] && bb.size() < 2)) {
 					strin[set].push_back(vertex_id[oo::num[j]]);
@@ -256,6 +296,7 @@ namespace nn {
 		return ans;
 	}
 }
+
 void nnresizevector(int n, int m) {
 	int N = n + m * 2 + 1111;
 	nn::num.resize(N);
@@ -289,7 +330,7 @@ void resizevector(int n, int m) {
 }
 
 void input(int &n, int &m, int &check) {
-	parse::parse();
+	parse::parsetest();
 
 	//std::cin >> n >> m;
 	n = parse::points.size();
@@ -308,6 +349,7 @@ void input(int &n, int &m, int &check) {
 		strings.push_back(parse::points[i - 1]);
 
 	}
+	int sttot = 0, edtot = 0, lasts, laste;
 	for (int i = 1; i <= m; i++) {
 		int u, v, s = strings.size();
 
@@ -319,13 +361,14 @@ void input(int &n, int &m, int &check) {
 
 		AddEdge(u, v, s);
 		AddEdge(v, u, s);
+
+		starts[etot] = starts[etot - 1] = parse::edges[i - 1].isstart;
+		ends[etot] = ends[etot - 1] = parse::edges[i - 1].isend;
 	}
 	int sn, en;
 
 	//std::cin >> sn;
 	sn = parse::S.size();
-
-	if (sn == 1) check = -2;
 
 	//for (; sn--; ) {
 	//	int t;
@@ -333,13 +376,12 @@ void input(int &n, int &m, int &check) {
 	for (auto t : parse::S) {
 
 		starts[t] = 1;
-		if (check == -2) check = t;
+		lasts = t;
+		sttot++;
 	}
 
 	//std::cin >> en;
 	en = parse::T.size();
-
-	if (en != 1) check = -1;
 
 	//for (; en--; ) {
 	//	int t;
@@ -347,8 +389,12 @@ void input(int &n, int &m, int &check) {
 	for (auto t : parse::T) {
 
 		ends[t] = 1;
-		if (check != t) check = -1;
+		laste = t;
+		edtot++;
 	}
+	//std::cout << sttot << ' ' << edtot << ' ' << lasts << ' ' << laste << '\n';
+	if (1 == edtot && sttot == 1 && lasts == laste)
+		check = lasts;
 }
 
 int main() {
@@ -376,10 +422,10 @@ int main() {
 			belong[j] = belong[j ^ 1] = i;
 	auto ans = nn::solve(n, bcc, belong);
 	std::set<std::string> ansset;
+	//for (auto &i : ans)
+	//	ansset.insert(strings[i]);
 	for (auto &i : ans)
-		ansset.insert(strings[i]);
-	for (auto &i : ansset)
-		std::cout << i << '\n';
+		std::cout << strings[i] << '\n';
 
 	return 0;
 }
